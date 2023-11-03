@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout, QFrame, QScrollArea, QDialog
+from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout, QFrame, QScrollArea, QDialog
 from PyQt5.QtGui import QPalette, QColor, QFont
 
 from explore import execute_query_in_database
@@ -26,7 +26,7 @@ class SQLQueryApp(QWidget):
         layout_top.addWidget(self.execute_button)
 
         # Connect the button click event to a function
-        self.execute_button.clicked.connect(self.execute_query)
+        self.execute_button.clicked.connect(self.executeQuery)
 
         # Create a scroll area to make the layout scrollable
         scroll_area = QScrollArea()
@@ -54,15 +54,34 @@ class SQLQueryApp(QWidget):
         self.execute_button.setStyleSheet("background-color: #007acc; color: #ffffff;")
     
 
-    def execute_query(self):
+    def executeQuery(self):
         # Get the SQL query from the input field
         query = self.sql_input.text()
-        results = execute_query_in_database(query)
-        self.generateBlockAccessedButtons(results)
+        try:
+            # results contains dictionary of table names and their records
+            results = execute_query_in_database(query)
+            
+            # for debug purpose only
+            for table_name in results:
+                print(table_name,": ",results[table_name],"\n\n")
+            
+            #this is hardcoded for now
+            result = list(results.values())[0]
+            self.generateBlockAccessedButtons(result)
+            
+        except Exception as e:
+            self.showErrorMessage("Error Executing Query", str(e))
+
+    def showErrorMessage(self, title, message):
+            error_dialog = QMessageBox()
+            error_dialog.setIcon(QMessageBox.Critical)
+            error_dialog.setWindowTitle(title)
+            error_dialog.setText(message)
+            error_dialog.exec_()
     
     def generateBlockAccessedButtons(self, results):
             # Clear existing buttons when executing a new query
-            self.clear_buttons()
+            self.clearButtons()
             # Create buttons and store records in the dictionary
             recordGroups = []
             curBlock = -1
@@ -90,7 +109,7 @@ class SQLQueryApp(QWidget):
             dialog.setLayout(layout)
             dialog.exec_()
                     
-    def clear_buttons(self):
+    def clearButtons(self):
         # Remove existing buttons from the layout
         while self.layout_bottom.count() > 0:
             item = self.layout_bottom.itemAt(0)
