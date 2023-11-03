@@ -2,8 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout, QFrame, QScrollArea, QDialog
 from PyQt5.QtGui import QPalette, QColor, QFont
 
-from explore import execute_query_in_database
-
+from explore import *
 class SQLQueryApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -52,7 +51,20 @@ class SQLQueryApp(QWidget):
         self.setStyleSheet("background-color: #f0f0f0;")
         self.label.setFont(QFont("Arial", 12))
         self.execute_button.setStyleSheet("background-color: #007acc; color: #ffffff;")
+        # Create a button to visualize the execution plan
+        self.visualize_plan_button = QPushButton("Visualize Execution Plan")
+        layout_top.addWidget(self.visualize_plan_button)
+        self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
+        
+        
     
+    def visualizeQueryPlan(self):
+        query = self.sql_input.text()
+        try:
+            plan = get_execution_plan(query)
+            visualize_execution_plan(plan)
+        except Exception as e:
+            self.showErrorMessage("Error Visualizing Query Plan", str(e))
 
     def executeQuery(self):
         # Get the SQL query from the input field

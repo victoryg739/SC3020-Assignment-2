@@ -1,7 +1,62 @@
 import psycopg2
 import re
 from config import db_host, db_name, db_user, db_password
+from graphviz import Digraph
 
+def get_execution_plan(query):
+    """
+    This function gets the execution plan for the given SQL query
+    and returns it as a string.
+    """
+    try:
+        # Connect to the database
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
+        cursor = conn.cursor()
+
+        # Use EXPLAIN to get the plan
+        execution_plan_query = f"EXPLAIN (FORMAT JSON) {query};"
+        cursor.execute(execution_plan_query)
+
+        # Fetch the plan
+        plan = cursor.fetchall()
+
+        # Close cursor and connection
+        cursor.close()
+        conn.close()
+
+        return plan[0][0][0]['Plan']  # Assume there is at least one plan
+    except psycopg2.Error as e:
+        raise RuntimeError(f"Error getting the execution plan: {e}")
+
+def visualize_execution_plan(plan, filename='plan'):
+    """
+    This function visualizes the execution plan using Graphviz.
+    """
+    def add_nodes_edges(plan, parent=None):
+        """
+        Recursively adds nodes and edges based on the plan tree structure.
+        """
+        if parent is None:  # Create the root node
+            parent = str(plan['Node Type'])
+            dot.node(parent, label=parent)
+        for child in plan.get('Plans', []):
+            child_node = str(child['Node Type'])
+            dot.node(child_node, label=child_node)
+            dot.edge(parent, child_node)
+            add_nodes_edges(child, parent=child_node)
+    
+    dot = Digraph(comment='Query Execution Plan')
+
+    # Start adding nodes and edges
+    add_nodes_edges(plan)
+
+    # Save the output
+    dot.render(filename, view=True)
 def execute_query_in_database(query):
     try:
         results = {}
