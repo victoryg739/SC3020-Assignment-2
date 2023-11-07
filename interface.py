@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QHBoxLayout, QFrame, QScrollArea, QDialog
 from PyQt5.QtGui import QPalette, QColor, QFont
+from PyQt5.QtWidgets import QTreeWidget
 
 from explore import *
 class SQLQueryApp(QWidget):
@@ -56,13 +57,27 @@ class SQLQueryApp(QWidget):
         layout_top.addWidget(self.visualize_plan_button)
         self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
         
+    def displayExecutionPlan(self, plan):
+        # Initialize the QTreeWidget
+        self.plan_tree_widget = QTreeWidget()
+        self.plan_tree_widget.setHeaderLabel("Execution Plan")
         
+        # Generate the tree items from the plan
+        root_item = build_tree_widget_item(plan)
+        self.plan_tree_widget.addTopLevelItem(root_item)
+        
+        # Add the tree widget to the UI layout
+        self.layout_bottom.addWidget(self.plan_tree_widget)
+        
+        # Update the UI
+        self.plan_tree_widget.expandAll()  # Optionally expand all tree nodes
     
     def visualizeQueryPlan(self):
         query = self.sql_input.text()
         try:
             plan = get_execution_plan(query)
-            visualize_execution_plan(plan)
+            display_tree_image(plan)
+            self.displayExecutionPlan(plan)
         except Exception as e:
             self.showErrorMessage("Error Visualizing Query Plan", str(e))
 

@@ -2,6 +2,8 @@ import psycopg2
 import re
 from config import db_host, db_name, db_user, db_password
 from graphviz import Digraph
+from PyQt5.QtWidgets import  QTreeWidgetItem
+
 
 def get_execution_plan(query):
     """
@@ -33,14 +35,21 @@ def get_execution_plan(query):
     except psycopg2.Error as e:
         raise RuntimeError(f"Error getting the execution plan: {e}")
 
-def visualize_execution_plan(plan, filename='plan'):
+def build_tree_widget_item(plan):
     """
-    This function visualizes the execution plan using Graphviz.
+    This function creates a QTreeWidgetItem based on the plan node.
+    """
+    item = QTreeWidgetItem([plan['Node Type']])
+    for child in plan.get('Plans', []):
+        child_item = build_tree_widget_item(child)
+        item.addChild(child_item)
+    return item
+
+def display_tree_image(plan, filename='plan'):
+    """
+    This function visualizes the execution plan using Graphviz launched in a PDF format.
     """
     def add_nodes_edges(plan, parent=None):
-        """
-        Recursively adds nodes and edges based on the plan tree structure.
-        """
         if parent is None:  # Create the root node
             parent = str(plan['Node Type'])
             dot.node(parent, label=parent)
@@ -57,6 +66,7 @@ def visualize_execution_plan(plan, filename='plan'):
 
     # Save the output
     dot.render(filename, view=True)
+    
 def execute_query_in_database(query):
     try:
         results = {}
