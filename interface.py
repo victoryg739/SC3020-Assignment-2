@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, \
     QHBoxLayout, QFrame, QScrollArea, QDialog, QTabWidget
 from PyQt5.QtGui import QPalette, QColor, QFont
+from PyQt5.QtWidgets import QTreeWidget
 
 from explore import *
 
@@ -28,7 +29,7 @@ class SQLQueryApp(QWidget):
         layout_top.addWidget(self.execute_button)
 
         # Connect the button click event to a function
-        self.execute_button.clicked.connect(self.execute_query)
+        self.execute_button.clicked.connect(self.executeQuery)
 
         # Create a button to visualize the execution plan
         self.visualize_plan_button = QPushButton("Visualize Execution Plan")
@@ -91,7 +92,7 @@ class SQLQueryApp(QWidget):
         except Exception as e:
             self.showErrorMessage("Error Visualizing Query Plan", str(e))
 
-    def execute_query(self):
+    def executeQuery(self):
         # Get the SQL query from the input field
         query = self.sql_input.text()
         try:
@@ -133,7 +134,7 @@ class SQLQueryApp(QWidget):
     
     def generateBlockAccessedButtons(self, results):
             # Clear existing buttons when executing a new query
-            self.clear_buttons()
+            self.clearButtons()
             # Create buttons and store records in the dictionary
             recordGroups = []
             curBlock = -1
@@ -161,7 +162,7 @@ class SQLQueryApp(QWidget):
             dialog.setLayout(layout)
             dialog.exec_()
                     
-    def clear_buttons(self):
+    def clearButtons(self):
         # Remove existing buttons from the layout
         while self.layout_bottom.count() > 0:
             item = self.layout_bottom.itemAt(0)
