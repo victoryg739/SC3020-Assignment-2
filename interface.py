@@ -137,9 +137,7 @@ class SQLQueryApp(QWidget):
     def tabChanged(self, index):
         # Get the current tab index and perform actions based on it
         if index >= 0:
-            current_tab = self.tab_widget.widget(index)
-            table_name = self.tab_widget.tabText(index)
-
+            table_name = self.tab_widget.tabText(index)            
             # Get the result for the current table
             result = self.results[table_name]
             self.generateBlockAccessedButtons(result)
@@ -154,7 +152,7 @@ class SQLQueryApp(QWidget):
     def generateBlockAccessedButtons(self, results):
         # Clear existing buttons when executing a new query
         self.clearButtons()
-
+        self.record_dict = {}
         # Create buttons and store records in the dictionary
         for record in results:
             # Get the block number from the first element of the tuple
@@ -175,7 +173,7 @@ class SQLQueryApp(QWidget):
             temp = QPushButton(f"Block {key}")
             self.layout_bottom.addWidget(temp)
             temp.clicked.connect(lambda _, block=key: self.showRecordsForBlock(block))
-
+            
     def showRecordsForBlock(self, block):
         # Display records for a specific block in a QDialog
         if block in self.record_dict:
