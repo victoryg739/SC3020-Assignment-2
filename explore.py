@@ -1,9 +1,12 @@
 import psycopg2
 import re
 from config import db_host, db_name, db_user, db_password
-from graphviz import Digraph
 from PyQt5.QtWidgets import  QTreeWidgetItem
-
+try:
+    from graphviz import Digraph
+    GRAPHVIZ_AVAILABLE = True
+except ImportError:
+    GRAPHVIZ_AVAILABLE = False
 
 def get_execution_plan(query):
     """
@@ -55,23 +58,31 @@ def display_tree_image(plan, filename='plan'):
     """
     This function visualizes the execution plan using Graphviz launched in a PDF format.
     """
-    def add_nodes_edges(plan, parent=None):
-        if parent is None:  # Create the root node
-            parent = str(plan['Node Type'])
-            dot.node(parent, label=parent)
-        for child in plan.get('Plans', []):
-            child_node = str(child['Node Type'])
-            dot.node(child_node, label=child_node)
-            dot.edge(parent, child_node)
-            add_nodes_edges(child, parent=child_node)
+    if not GRAPHVIZ_AVAILABLE:
+        print("Graphviz is not available. Skipping visualization.")
+        return
+
+    try:
+        def add_nodes_edges(plan, parent=None):
+            if parent is None:  # Create the root node
+                parent = str(plan['Node Type'])
+                dot.node(parent, label=parent)
+            for child in plan.get('Plans', []):
+                child_node = str(child['Node Type'])
+                dot.node(child_node, label=child_node)
+                dot.edge(parent, child_node)
+                add_nodes_edges(child, parent=child_node)
     
-    dot = Digraph(comment='Query Execution Plan')
+        dot = Digraph(comment='Query Execution Plan')
 
-    # Start adding nodes and edges
-    add_nodes_edges(plan)
+        # Start adding nodes and edges
+        add_nodes_edges(plan)
 
-    # Save the output
-    dot.render(filename, view=True)
+        # Save the output
+        dot.render(filename, view=True)
+    except Exception as e:
+        print(f"An error occurred while creating the visualization: {e}")
+
     
 def execute_query_in_database(query):
     try:
