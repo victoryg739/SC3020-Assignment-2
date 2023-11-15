@@ -5,6 +5,33 @@ from PyQt5.QtGui import QPalette, QColor, QFont
 from PyQt5.QtWidgets import QTreeWidget
 
 from explore import *
+
+class ExecutionPlanDialog(QDialog):
+    def __init__(self, plan, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Execution Plan")
+        self.setGeometry(200, 200, 600, 400)
+
+        layout = QVBoxLayout(self)
+
+        # Create a label for the Execution Plan
+        label = QLabel("Execution Plan:")
+        layout.addWidget(label)
+
+        # Initialize the QTreeWidget
+        plan_tree_widget = QTreeWidget()
+        plan_tree_widget.setHeaderLabel("Execution Plan")
+
+        # Generate the tree items from the plan
+        root_item = build_tree_widget_item(plan)
+        plan_tree_widget.addTopLevelItem(root_item)
+
+        # Add the tree widget to the layout
+        layout.addWidget(plan_tree_widget)
+
+        # Optionally expand all tree nodes
+        plan_tree_widget.expandAll()
+
 class SQLQueryApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -12,7 +39,6 @@ class SQLQueryApp(QWidget):
         self.initUI()
 
     def initUI(self):
-        
         layout_top = QVBoxLayout()
 
         # Create a label for the SQL query input
@@ -26,8 +52,6 @@ class SQLQueryApp(QWidget):
         # Create a button to execute the SQL query
         self.execute_button = QPushButton("Execute Query")
         layout_top.addWidget(self.execute_button)
-
-        # Connect the button click event to a function
         self.execute_button.clicked.connect(self.executeQuery)
 
         # Create a button to visualize the execution plan
@@ -35,15 +59,17 @@ class SQLQueryApp(QWidget):
         layout_top.addWidget(self.visualize_plan_button)
         self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
 
+        # Add some spacing between the button and the main layout
+        layout_top.addSpacing(10)
+
         # Create a tab widget to hold tabs for each table
         self.tab_widget = QTabWidget()
         layout_top.addWidget(self.tab_widget)
-        # Connect the tabChanged signal to a custom function
         self.tab_widget.currentChanged.connect(self.tabChanged)
 
         # Create a scroll area to make the layout scrollable
         scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)  # Ensure the widget inside the scroll area resizes properly
+        scroll_area.setWidgetResizable(True)
 
         # Create a widget to hold the vertical layout
         layout_bottom_widget = QWidget()
@@ -53,11 +79,9 @@ class SQLQueryApp(QWidget):
         scroll_area.setWidget(layout_bottom_widget)
 
         # Create a main layout for the main window
-        main_layout = QVBoxLayout()
+        main_layout = QVBoxLayout(self)
         main_layout.addLayout(layout_top)
-        main_layout.addWidget(scroll_area)  # Add the scroll area to the main layout
-
-        self.setLayout(main_layout)
+        main_layout.addWidget(scroll_area, 1)  # Use stretch factor to control size
 
         # Beautify the window with styles
         self.setWindowTitle("SQL Query App")
@@ -65,7 +89,6 @@ class SQLQueryApp(QWidget):
         self.setStyleSheet("background-color: #f0f0f0;")
         self.label.setFont(QFont("Arial", 12))
         self.execute_button.setStyleSheet("background-color: #007acc; color: #ffffff;")
-
         
     def displayExecutionPlan(self, plan):
         # Initialize the QTreeWidget
@@ -87,7 +110,10 @@ class SQLQueryApp(QWidget):
         try:
             plan = get_execution_plan(query)
             display_tree_image(plan)
-            self.displayExecutionPlan(plan)
+
+            # Display the Execution Plan in a separate dialog
+            dialog = ExecutionPlanDialog(plan, self)
+            dialog.exec_()
         except Exception as e:
             self.showErrorMessage("Error Visualizing Query Plan", str(e))
 
@@ -97,17 +123,13 @@ class SQLQueryApp(QWidget):
         try:
             # results contains a dictionary of table names and their records
             self.results = execute_query_in_database(query)
-
-            # for debug purposes only
+            self.tab_widget.clear()
             for table_name in self.results:
-                # print(table_name, ": ", results[table_name], "\n\n")
-
                 # Create a new tab for each table
                 tab = QWidget()
                 self.tab_widget.addTab(tab, table_name)
                 self.tab_widget.setCurrentWidget(tab)
 
-        
 
         except Exception as e:
             self.showErrorMessage("Error Executing Query", str(e))
