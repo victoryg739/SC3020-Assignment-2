@@ -21,7 +21,7 @@ def get_execution_plan(query):
         cursor = conn.cursor()
 
         # Use EXPLAIN to get the plan
-        execution_plan_query = f"EXPLAIN (FORMAT JSON) {query};"
+        execution_plan_query = f"EXPLAIN (analyze, buffers, costs on, FORMAT JSON) {query};"
         cursor.execute(execution_plan_query)
 
         # Fetch the plan
@@ -36,14 +36,20 @@ def get_execution_plan(query):
         raise RuntimeError(f"Error getting the execution plan: {e}")
 
 def build_tree_widget_item(plan):
-    """
-    This function creates a QTreeWidgetItem based on the plan node.
-    """
-    item = QTreeWidgetItem([plan['Node Type']])
-    for child in plan.get('Plans', []):
-        child_item = build_tree_widget_item(child)
-        item.addChild(child_item)
-    return item
+        """
+        Recursively create QTreeWidgetItem based on the plan node.
+        """
+        item = QTreeWidgetItem([plan['Node Type']])
+        for key, value in plan.items():
+            if key == 'Plans':
+                for child in value:
+                    child_item = build_tree_widget_item(child)
+                    item.addChild(child_item)
+            elif key != 'Node Type':
+                # Add other details as child items
+                child_item = QTreeWidgetItem(["{}: {}".format(key, value)])
+                item.addChild(child_item)
+        return item
 
 def display_tree_image(plan, filename='plan'):
     """
