@@ -140,8 +140,6 @@ class SQLQueryApp(QWidget):
             current_tab = self.tab_widget.widget(index)
             table_name = self.tab_widget.tabText(index)
 
-            # You can call your function here based on the current tab
-            print(f"Tab changed to {table_name}")
             # Get the result for the current table
             result = self.results[table_name]
             self.generateBlockAccessedButtons(result)
@@ -154,32 +152,47 @@ class SQLQueryApp(QWidget):
             error_dialog.exec_()
     
     def generateBlockAccessedButtons(self, results):
-            # Clear existing buttons when executing a new query
-            self.clearButtons()
-            # Create buttons and store records in the dictionary
-            recordGroups = []
-            curBlock = -1
-            for record in results:
-                elements = [int(x) for x in record[0][1:-1].split(',')]
-                if curBlock != elements[0]:
-                    curBlock = elements[0]
-                    recordGroups = []
-                    temp = QPushButton(f"Block {curBlock}")
-                    self.layout_bottom.addWidget(temp)
-                    temp.clicked.connect(lambda _, block=curBlock: self.showRecordsForBlock(block))
-                recordGroups.append(record)
-                self.record_dict[curBlock] = recordGroups
-                
+        # Clear existing buttons when executing a new query
+        self.clearButtons()
+
+        # Create buttons and store records in the dictionary
+        for record in results:
+            # Get the block number from the first element of the tuple
+            elements = [int(x) for x in record[0][1:-1].split(',')]
+
+            # Append the record to the record_dict with block number as the key
+            if elements[0] not in self.record_dict:
+                self.record_dict[elements[0]] = [record]
+            else:
+                self.record_dict[elements[0]].append(record)
+
+        # Sort records for each block based on the second part of the tuple's first element
+        for block in self.record_dict:
+            self.record_dict[block] = sorted(self.record_dict[block], key=lambda x: int(x[0].split(',')[1][:-1]))
+
+        # Create buttons for each block and connect them to the showRecordsForBlock function
+        for key in sorted(self.record_dict.keys()):
+            temp = QPushButton(f"Block {key}")
+            self.layout_bottom.addWidget(temp)
+            temp.clicked.connect(lambda _, block=key: self.showRecordsForBlock(block))
+
     def showRecordsForBlock(self, block):
+        # Display records for a specific block in a QDialog
         if block in self.record_dict:
             records = self.record_dict[block]
+
+            # Create a dialog window
             dialog = QDialog(self)
             dialog.setWindowTitle(f"Records for Block {block}")
             layout = QVBoxLayout()
+
+            # Display records in a QTextEdit widget
             text_edit = QTextEdit()
             text = "\n".join([str(record) for record in records])
             text_edit.setPlainText(text)
             layout.addWidget(text_edit)
+
+            # Set the layout for the dialog
             dialog.setLayout(layout)
             dialog.exec_()
                     
