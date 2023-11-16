@@ -52,6 +52,9 @@ def build_tree_widget_item(plan):
                 # Add other details as child items
                 child_item = QTreeWidgetItem(["{}: {}".format(key, value)])
                 item.addChild(child_item)
+                if(key=='Shared Hit Blocks' or key=='Shared Read Blocks'):
+                    child_item = QTreeWidgetItem(["{} Size: {}kB".format(key, value*8)])
+                    item.addChild(child_item)
         return item
 
 def display_tree_image(plan, filename='plan'):
