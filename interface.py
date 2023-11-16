@@ -70,9 +70,9 @@ class SQLQueryApp(QWidget):
         self.execute_button.clicked.connect(self.executeQuery)
 
         # Create a button to visualize the execution plan
-        self.visualize_plan_button = QPushButton("Visualize Execution Plan")
-        self.layout_left.addWidget(self.visualize_plan_button)
-        self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
+        # self.visualize_plan_button = QPushButton("Visualize Execution Plan")
+        # self.layout_left.addWidget(self.visualize_plan_button)
+        # self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
 
         # Add some spacing 
         self.layout_left.addSpacing(30)
@@ -200,6 +200,8 @@ class SQLQueryApp(QWidget):
 
         except Exception as e:
             self.showErrorMessage("Error Executing Query", str(e))
+
+        self.visualizeQueryPlan()
 
     def tabChanged(self, index):
         # Get the current tab index and perform actions based on it
