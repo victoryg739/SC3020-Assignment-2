@@ -114,9 +114,6 @@ def execute_query_in_database(query):
         # Close the cursor and connection
         cursor.close()
         conn.close()
-        
-        # for table_name in results:
-        #     print(table_name,": ",results[table_name],"\n\n")
             
         return results
     except psycopg2.Error as e:
@@ -143,31 +140,38 @@ def convert_query_to_ctid_query(query):
     
     table_names = get_table_names(query)
     ctid_queries = {}
+    query = query.strip()
     select_index = query.upper().find("SELECT")
     
-    if select_index != -1:
+
+    for table_name in table_names:
+        #erase ";" if any
+        if query[-1]==";":
+            new_query = query[:-1]
+        else:
+            new_query = query
+            
+        select_index = new_query.upper().find("SELECT")
         insert_position = select_index + len("SELECT")
+            
+        #add (table_name).ctid to the query
+        new_query = new_query[:insert_position] + " " + table_name + ".ctid AS ctid" + ", " + new_query[insert_position:]
         
-        for table_name in table_names:
-            #erase ";" if any
-            if query[-1]==";":
-                new_query = query[:-1]
-            else:
-                new_query = query
-            #add (table_name).ctid to the query
-            new_query = new_query[:insert_position] + " " + table_name + ".ctid AS ctid" + ", " + new_query[insert_position:]
+        #add ctid to the group by clause
+        group_by_index = new_query.upper().find("GROUP BY")
+        if group_by_index != -1:
+            insert_position = group_by_index + len("GROUP BY")
+            new_query = new_query[:insert_position] + " " + "ctid" + ", " + new_query[insert_position:]
+        
+        #project the ctid column
+        new_query = "SELECT ctid FROM (" + new_query + ")" 
 
-            #project the ctid column
-            new_query = "SELECT ctid FROM (" + new_query + ")" 
+        #retrieve all the tuples in a given table based on ctid
+        new_query = "SELECT ctid, * FROM " + table_name + " WHERE ctid IN (" + new_query + ")" 
+        
+        ctid_queries[table_name] = new_query
+    return ctid_queries
 
-            #retrieve all the tuples in a given table based on ctid
-            new_query = "SELECT ctid, * FROM " + table_name + " WHERE ctid IN (" + new_query + ")" 
-
-            ctid_queries[table_name] = new_query
-                
-        return ctid_queries
-    else:
-        raise RuntimeError(f"Error executing the query")
 
     
 
