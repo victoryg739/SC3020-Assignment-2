@@ -113,16 +113,47 @@ def execute_query_in_database(query):
 
         # Execute the SQL query
         ctid_queries = convert_query_to_ctid_query(query)
-        
+        isErrorFirstPass = False
         for table_name in ctid_queries:
-            query  = ctid_queries[table_name]
-            cursor.execute(query)
+            ctid_query  = ctid_queries[table_name]
+            try:
+                cursor.execute(ctid_query)
+            except psycopg2.Error as e:
+                isErrorFirstPass = True
+                continue
             # Fetch and format the results for each query
             result = cursor.fetchall()
             results[table_name] = result
-            
         # Close the cursor and connection
         cursor.close()
+        conn.close()
+        
+        # If first pass error, we check 2nd pass for aggregate function
+        if isErrorFirstPass:
+            # Establish a database connection
+            conn = psycopg2.connect(
+                host=db_host,
+                database=db_name,
+                user=db_user,
+                password=db_password
+            )
+            # Create a cursor object
+            cursor = conn.cursor()
+            ctid_queries = convert_query_to_ctid_query(query, checkAggregate = isErrorFirstPass)
+            for table_name in ctid_queries:
+                ctid_query  = ctid_queries[table_name]
+                try:
+                    cursor.execute(ctid_query)
+                except psycopg2.Error as e:
+                    raise RuntimeError(f"Error executing the query: {e}")
+                # Fetch and format the results for each query
+                result = cursor.fetchall()
+                results[table_name] = result
+            # Close the cursor
+            cursor.close()
+            conn.close()
+            
+        # Close the connection
         conn.close()
             
         return results
@@ -144,7 +175,7 @@ def get_table_names(query):
 
     return table_names    
 
-def convert_query_to_ctid_query(query):
+def convert_query_to_ctid_query(query, checkAggregate = False):
     if "ctid" in query.lower():
         raise RuntimeError(f"\"ctid\" is a reserved word, please remove it from the query")
     
@@ -153,7 +184,6 @@ def convert_query_to_ctid_query(query):
     query = query.strip()
     select_index = query.upper().find("SELECT")
     
-
     for table_name in table_names:
         #erase ";" if any
         if query[-1]==";":
@@ -161,25 +191,64 @@ def convert_query_to_ctid_query(query):
         else:
             new_query = query
             
-        select_index = new_query.upper().find("SELECT")
-        insert_position = select_index + len("SELECT")
-            
-        #add (table_name).ctid to the query
-        new_query = new_query[:insert_position] + " " + table_name + ".ctid AS ctid" + ", " + new_query[insert_position:]
+        # Regular expression to identify UNION, UNION ALL, INTERSECT, or EXCEPT
+        set_operation_regex = r'\b(UNION\s+ALL|UNION|INTERSECT|EXCEPT)\b'
         
-        #add ctid to the group by clause
-        group_by_index = new_query.upper().find("GROUP BY")
-        if group_by_index != -1:
-            insert_position = group_by_index + len("GROUP BY")
-            new_query = new_query[:insert_position] + " " + "ctid" + ", " + new_query[insert_position:]
+        # Save the Set Operation
+        operators = re.findall(set_operation_regex, query, flags=re.IGNORECASE)
+        
+        # Split the query based on the pattern
+        sub_queries = re.split(set_operation_regex, new_query, flags=re.IGNORECASE)
+        sub_queries = [sub_query.strip() for sub_query in sub_queries]
+        
+        modified_sub_queries = []
+        
+        # Add ctid to every sub query
+        for sub_query in sub_queries:
+            select_index = sub_query.upper().find("SELECT")
+            insert_position = select_index + len("SELECT")
+                
+            #add (table_name).ctid to the query
+            sub_query = sub_query[:insert_position] + " " + table_name + ".ctid AS ctid" + ", " + sub_query[insert_position:]
+            
+            #add ctid to the group by clause
+            group_by_index = sub_query.upper().find("GROUP BY")
+            if group_by_index != -1:
+                insert_position = group_by_index + len("GROUP BY")
+                sub_query = sub_query[:insert_position] + " " + "ctid" + ", " + sub_query[insert_position:]
+            else:
+                # If first pass error, we check 2nd pass for aggregate function by adding group by ctid
+                if checkAggregate:
+                    aggregate_pattern = re.compile(r'\b(COUNT|SUM|AVG|MAX|MIN)\(', re.IGNORECASE)
+                    match = aggregate_pattern.search(query)
+                    # Insert group by clause before having, order by, or limit
+                    if match:
+                        if sub_query.upper().find("HAVING") != -1:
+                            insert_position = sub_query.upper().rfind("HAVING")-1
+                        elif  sub_query.upper().find("ORDER BY") != -1:
+                            insert_position = sub_query.upper().rfind("ORDER BY")-1
+                        elif sub_query.upper().find("LIMIT") != -1: 
+                            insert_position = sub_query.upper().rfind("LIMIT")-1
+                        else:
+                            insert_position = len(sub_query)
+                        sub_query = sub_query[:insert_position] + " " + "GROUP BY" + " " + table_name + ".ctid" + sub_query[insert_position:]
+                        
+            modified_sub_queries.append(sub_query)
+        
+        # Merge all the sub queries
+        merge_query = ""
+        for i in range (len(operators)):
+            merge_query = merge_query + modified_sub_queries[i] + " " + operators[i] + " "
+        merge_query = merge_query + modified_sub_queries[-1]
         
         #project the ctid column
-        new_query = "SELECT ctid FROM (" + new_query + ")" 
+        merge_query = "SELECT ctid FROM (" + merge_query + ")" 
 
         #retrieve all the tuples in a given table based on ctid
-        new_query = "SELECT ctid, * FROM " + table_name + " WHERE ctid IN (" + new_query + ")" 
+        merge_query = "SELECT ctid, * FROM " + table_name + " WHERE ctid IN (" + merge_query + ")" 
         
-        ctid_queries[table_name] = new_query
+        ctid_queries[table_name] = merge_query
+
     return ctid_queries
 
 
