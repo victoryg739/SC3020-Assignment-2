@@ -1,8 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, \
-    QHBoxLayout, QFrame, QScrollArea, QDialog, QTabWidget
+    QHBoxLayout, QFrame, QScrollArea, QDialog, QTabWidget, QSplitter, QTableWidget, QTableWidgetItem, QSizePolicy
 from PyQt5.QtGui import QPalette, QColor, QFont
 from PyQt5.QtWidgets import QTreeWidget
+from PyQt5.QtSvg import QSvgWidget
 
 from explore import *
 
@@ -39,56 +40,93 @@ class SQLQueryApp(QWidget):
         self.initUI()
 
     def initUI(self):
-        layout_top = QVBoxLayout()
+        # Creating a main layout for the main window
+        main_layout = QVBoxLayout(self)
 
-        # Create a label for the SQL query input
-        self.label = QLabel("SQL Query:")
-        layout_top.addWidget(self.label)
+        # Create a label for the app
+        self.label = QLabel("SQL Query Explorer")
+        self.label.setFixedHeight(30)
+        self.label.setStyleSheet("font: bold 20px monospace;")
+        main_layout.addWidget(self.label)
+
+         # -------------LEFT SIDE-----------------------
+        # Create a vertical layout for the left box
+        layout_left = QVBoxLayout()
+
+        # Create a label for the SQL input
+        label_sql_input = QLabel("Enter an SQL Query:")
+        layout_left.addWidget(label_sql_input)
 
         # Create an input field for SQL query
-        self.sql_input = QLineEdit()
-        layout_top.addWidget(self.sql_input)
+        self.sql_input = QTextEdit()
+        # self.sql_input.setFixedHeight(200)
+        layout_left.addWidget(self.sql_input)
 
         # Create a button to execute the SQL query
         self.execute_button = QPushButton("Execute Query")
-        layout_top.addWidget(self.execute_button)
+        layout_left.addWidget(self.execute_button)
         self.execute_button.clicked.connect(self.executeQuery)
 
         # Create a button to visualize the execution plan
         self.visualize_plan_button = QPushButton("Visualize Execution Plan")
-        layout_top.addWidget(self.visualize_plan_button)
+        layout_left.addWidget(self.visualize_plan_button)
         self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
 
-        # Add some spacing between the button and the main layout
-        layout_top.addSpacing(10)
+        #-----------------------------------------------
+
+        # -------------RIGHT SIDE-----------------------
+        # Create a vertical layout for the right box
+        layout_right = QVBoxLayout()
+
+        # Create a label for the SQL input
+        label_blocks = QLabel("Blocks Accessed (Grouped by Tables)")
+        layout_right.addWidget(label_blocks)
 
         # Create a tab widget to hold tabs for each table
         self.tab_widget = QTabWidget()
-        layout_top.addWidget(self.tab_widget)
+        layout_right.addWidget(self.tab_widget)
         self.tab_widget.currentChanged.connect(self.tabChanged)
 
         # Create a scroll area to make the layout scrollable
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
 
-        # Create a widget to hold the vertical layout
-        layout_bottom_widget = QWidget()
-        self.layout_bottom = QVBoxLayout(layout_bottom_widget)
+        # Create a widget to hold the blocks
+        blocks_layout_widget = QWidget()
+        self.layout_blocks = QVBoxLayout(blocks_layout_widget)
 
         # Set the layout widget as the widget for the scroll area
-        scroll_area.setWidget(layout_bottom_widget)
+        scroll_area.setWidget(blocks_layout_widget)
+        layout_right.addWidget(scroll_area, 1)  # Use stretch factor to control size
+        #-----------------------------------------------
 
-        # Create a main layout for the main window
-        main_layout = QVBoxLayout(self)
-        main_layout.addLayout(layout_top)
-        main_layout.addWidget(scroll_area, 1)  # Use stretch factor to control size
+        # Add a QSplitter to the main layout
+        splitter = QSplitter()
+        main_layout.addWidget(splitter)
+
+        # Add the left and right layouts to the QSplitter as widgets
+        widget_left = QWidget()
+        widget_left.setLayout(layout_left)
+        splitter.addWidget(widget_left)
+
+        widget_right = QWidget()
+        widget_right.setLayout(layout_right)
+        splitter.addWidget(widget_right)
+
+        # # Create widget for graph
+        # graph_widget = QSvgWidget(self)
+        # main_layout.addWidget(graph_widget)
+
+        # # Load svg graph into widget
+        # graph_widget.load("plan-svg.svg")
 
         # Beautify the window with styles
         self.setWindowTitle("SQL Query App")
         self.setGeometry(100, 100, 800, 600)
         self.setStyleSheet("background-color: #f0f0f0; color: #000000;")
         self.label.setFont(QFont("Arial", 12))
-        self.execute_button.setStyleSheet("background-color: #007acc; color: #000000;")
+        self.execute_button.setStyleSheet("background-color: #007acc; color: #ffffff;")
+        self.setLayout(main_layout)
 
         
     def displayExecutionPlan(self, plan):
@@ -101,13 +139,13 @@ class SQLQueryApp(QWidget):
         self.plan_tree_widget.addTopLevelItem(root_item)
         
         # Add the tree widget to the UI layout
-        self.layout_bottom.addWidget(self.plan_tree_widget)
+        self.layout_blocks.addWidget(self.plan_tree_widget)
         
         # Update the UI
         self.plan_tree_widget.expandAll()  # Optionally expand all tree nodes
     
     def visualizeQueryPlan(self):
-        query = self.sql_input.text()
+        query = self.sql_input.toPlainText()
         try:
             plan = get_execution_plan(query)
             display_tree_image(plan)
@@ -120,7 +158,7 @@ class SQLQueryApp(QWidget):
 
     def executeQuery(self):
         # Get the SQL query from the input field
-        query = self.sql_input.text()
+        query = self.sql_input.toPlainText()
         try:
             # results contains a dictionary of table names and their records
             self.results = execute_query_in_database(query)
@@ -130,7 +168,6 @@ class SQLQueryApp(QWidget):
                 tab = QWidget()
                 self.tab_widget.addTab(tab, table_name)
                 self.tab_widget.setCurrentWidget(tab)
-
 
         except Exception as e:
             self.showErrorMessage("Error Executing Query", str(e))
@@ -172,7 +209,7 @@ class SQLQueryApp(QWidget):
         # Create buttons for each block and connect them to the showRecordsForBlock function
         for key in sorted(self.record_dict.keys()):
             temp = QPushButton(f"Block {key}")
-            self.layout_bottom.addWidget(temp)
+            self.layout_blocks.addWidget(temp)
             temp.clicked.connect(lambda _, block=key: self.showRecordsForBlock(block))
             
     def showRecordsForBlock(self, block):
@@ -186,10 +223,30 @@ class SQLQueryApp(QWidget):
             layout = QVBoxLayout()
 
             # Display records in a QTextEdit widget
-            text_edit = QTextEdit()
-            text = "\n".join([str(record) for record in records])
-            text_edit.setPlainText(text)
-            layout.addWidget(text_edit)
+            # text_edit = QTextEdit()
+            # text = "\n".join([str(record) for record in records])
+
+            # Display records in a QTableWidget
+            table = QTableWidget(len(records), len(records[0]))
+
+            for row, record in enumerate(records):
+                for col, field in enumerate(record):
+                    item = QTableWidgetItem(str(field))
+                    table.setItem(row, col, item)
+
+            # Set table properties
+            table.setEditTriggers(QTableWidget.NoEditTriggers)  # Disable editing
+            table.setShowGrid(True)
+            table.setLineWidth(1)  # Set line width for the grid
+            # text_edit.setPlainText(text)
+            table.setStyleSheet("color: black;")
+            # Set the border color for horizontal header
+            table.horizontalHeader().setStyleSheet("QHeaderView::section { border: 1px solid black; background-color: lightgrey;}")
+
+            # Set the border color for vertical header
+            table.verticalHeader().setStyleSheet("QHeaderView::section { border: 1px solid black;background-color: lightgrey; }")
+            layout.addWidget(table)
+            table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
             # Set the layout for the dialog
             dialog.setLayout(layout)
@@ -197,12 +254,12 @@ class SQLQueryApp(QWidget):
                     
     def clearButtons(self):
         # Remove existing buttons from the layout
-        while self.layout_bottom.count() > 0:
-            item = self.layout_bottom.itemAt(0)
+        while self.layout_blocks.count() > 0:
+            item = self.layout_blocks.itemAt(0)
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
-            self.layout_bottom.removeItem(item)
+            self.layout_blocks.removeItem(item)
                      
             
 def startWindow():

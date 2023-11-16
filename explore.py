@@ -65,7 +65,6 @@ def display_tree_image(plan, filename='plan'):
     """
     This function visualizes the execution plan using Graphviz launched in a PDF format.
     """
-    
 
     if not GRAPHVIZ_AVAILABLE:
         print("Graphviz is not available. Skipping visualization.")
