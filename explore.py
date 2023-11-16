@@ -1,4 +1,8 @@
 import psycopg2
+from psycopg2 import connect
+
+# Rest of your code using the `connect` function
+
 import re
 from config import db_host, db_name, db_user, db_password
 from PyQt5.QtWidgets import  QTreeWidgetItem
@@ -35,7 +39,7 @@ def get_execution_plan(query):
         conn.close()
 
         return plan[0][0][0]['Plan']  # Assume there is at least one plan
-    except psycopg2.Error as e:
+    except Exception as e:
         raise RuntimeError(f"Error getting the execution plan: {e}")
 
 def build_tree_widget_item(plan):
@@ -61,18 +65,24 @@ def display_tree_image(plan, filename='plan'):
     """
     This function visualizes the execution plan using Graphviz launched in a PDF format.
     """
+    
+
     if not GRAPHVIZ_AVAILABLE:
         print("Graphviz is not available. Skipping visualization.")
         return
 
     try:
+        counter = 0
         def add_nodes_edges(plan, parent=None):
+            nonlocal counter
+            counter+=1
             if parent is None:  # Create the root node
-                parent = str(plan['Node Type'])
-                dot.node(parent, label=parent)
+                parent = str(plan['Node Type'])+"_"+str(counter)
+                dot.node(parent, label=str(plan['Node Type']), shape='box')
+            counter+=1
             for child in plan.get('Plans', []):
-                child_node = str(child['Node Type'])
-                dot.node(child_node, label=child_node)
+                child_node = str(child['Node Type'])+"_"+str(counter)
+                dot.node(child_node, label=str(child['Node Type']), shape='box')
                 dot.edge(parent, child_node)
                 add_nodes_edges(child, parent=child_node)
     
@@ -116,7 +126,7 @@ def execute_query_in_database(query):
         conn.close()
             
         return results
-    except psycopg2.Error as e:
+    except Exception as e:
         raise RuntimeError(f"Error executing the query: {e}")
 
 def get_table_names(query):

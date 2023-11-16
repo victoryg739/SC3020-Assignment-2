@@ -86,9 +86,10 @@ class SQLQueryApp(QWidget):
         # Beautify the window with styles
         self.setWindowTitle("SQL Query App")
         self.setGeometry(100, 100, 800, 600)
-        self.setStyleSheet("background-color: #f0f0f0;")
+        self.setStyleSheet("background-color: #f0f0f0; color: #000000;")
         self.label.setFont(QFont("Arial", 12))
-        self.execute_button.setStyleSheet("background-color: #007acc; color: #ffffff;")
+        self.execute_button.setStyleSheet("background-color: #007acc; color: #000000;")
+
         
     def displayExecutionPlan(self, plan):
         # Initialize the QTreeWidget
