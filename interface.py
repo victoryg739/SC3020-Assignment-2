@@ -131,17 +131,20 @@ class SQLQueryApp(QWidget):
                 self.tab_widget.addTab(tab, table_name)
                 self.tab_widget.setCurrentWidget(tab)
 
-
         except Exception as e:
             self.showErrorMessage("Error Executing Query", str(e))
 
     def tabChanged(self, index):
         # Get the current tab index and perform actions based on it
         if index >= 0:
-            table_name = self.tab_widget.tabText(index)            
+            table_name = self.tab_widget.tabText(index)
             # Get the result for the current table
-            result = self.results[table_name]
-            self.generateBlockAccessedButtons(result)
+            if table_name in self.results:
+                result = self.results[table_name]
+                self.generateBlockAccessedButtons(result)
+            else:
+                # Set the current tab to index 0 (or another default index)
+                self.tab_widget.setCurrentIndex(0)
 
     def showErrorMessage(self, title, message):
             error_dialog = QMessageBox()
