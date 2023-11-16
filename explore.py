@@ -61,7 +61,7 @@ def build_tree_widget_item(plan):
                     item.addChild(child_item)
         return item
 
-def display_tree_image(plan, filename='plan'):
+def display_tree_image(plan, filename='plan-svg'):
     """
     This function visualizes the execution plan using Graphviz launched in a PDF format.
     """
@@ -85,13 +85,13 @@ def display_tree_image(plan, filename='plan'):
                 dot.edge(parent, child_node)
                 add_nodes_edges(child, parent=child_node)
     
-        dot = Digraph(comment='Query Execution Plan')
+        dot = Digraph(comment='Query Execution Plan', format='svg')
 
         # Start adding nodes and edges
         add_nodes_edges(plan)
 
         # Save the output
-        dot.render(filename, view=True)
+        dot.render(filename, view=False)
     except Exception as e:
         print(f"An error occurred while creating the visualization: {e}")
 

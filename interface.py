@@ -1,4 +1,5 @@
 import sys
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, \
     QHBoxLayout, QFrame, QScrollArea, QDialog, QTabWidget, QSplitter, QTableWidget, QTableWidgetItem, QSizePolicy
 from PyQt5.QtGui import QPalette, QColor, QFont
@@ -7,11 +8,12 @@ from PyQt5.QtSvg import QSvgWidget
 
 from explore import *
 
+# not used
 class ExecutionPlanDialog(QDialog):
     def __init__(self, plan, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Execution Plan")
-        self.setGeometry(200, 200, 600, 400)
+        self.setGeometry(200, 200, 800, 600)
 
         layout = QVBoxLayout(self)
 
@@ -44,49 +46,46 @@ class SQLQueryApp(QWidget):
         main_layout = QVBoxLayout(self)
 
         # Create a label for the app
-        self.label = QLabel("SQL Query Explorer")
+        self.label = QLabel("SQL Query Explorer 🔎")
         self.label.setFixedHeight(30)
         self.label.setStyleSheet("font: bold 20px monospace;")
         main_layout.addWidget(self.label)
 
          # -------------LEFT SIDE-----------------------
         # Create a vertical layout for the left box
-        layout_left = QVBoxLayout()
+        self.layout_left = QVBoxLayout()
 
         # Create a label for the SQL input
         label_sql_input = QLabel("Enter an SQL Query:")
-        layout_left.addWidget(label_sql_input)
+        self.layout_left.addWidget(label_sql_input)
 
         # Create an input field for SQL query
         self.sql_input = QTextEdit()
         # self.sql_input.setFixedHeight(200)
-        layout_left.addWidget(self.sql_input)
+        self.layout_left.addWidget(self.sql_input)
 
         # Create a button to execute the SQL query
         self.execute_button = QPushButton("Execute Query")
-        layout_left.addWidget(self.execute_button)
+        self.layout_left.addWidget(self.execute_button)
         self.execute_button.clicked.connect(self.executeQuery)
 
         # Create a button to visualize the execution plan
         self.visualize_plan_button = QPushButton("Visualize Execution Plan")
-        layout_left.addWidget(self.visualize_plan_button)
+        self.layout_left.addWidget(self.visualize_plan_button)
         self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
 
-        #-----------------------------------------------
+        # Add some spacing 
+        self.layout_left.addSpacing(30)
 
-        # -------------RIGHT SIDE-----------------------
-        # Create a vertical layout for the right box
-        layout_right = QVBoxLayout()
-
-        # Create a label for the SQL input
+        # Create a label for the block accessed input
         label_blocks = QLabel("Blocks Accessed (Grouped by Tables)")
-        layout_right.addWidget(label_blocks)
+        self.layout_left.addWidget(label_blocks)
 
         # Create a tab widget to hold tabs for each table
         self.tab_widget = QTabWidget()
-        layout_right.addWidget(self.tab_widget)
+        self.layout_left.addWidget(self.tab_widget)
         self.tab_widget.currentChanged.connect(self.tabChanged)
-
+        
         # Create a scroll area to make the layout scrollable
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -97,32 +96,63 @@ class SQLQueryApp(QWidget):
 
         # Set the layout widget as the widget for the scroll area
         scroll_area.setWidget(blocks_layout_widget)
-        layout_right.addWidget(scroll_area, 1)  # Use stretch factor to control size
+        self.layout_left.addWidget(scroll_area, 1)  # Use stretch factor to control size
+
+        #-----------------------------------------------
+        # -------------MIDDLE-----------------------
+        # Create a vertical layout for the right box
+        self.layout_middle = QVBoxLayout()
+        self.layout_middle.setAlignment(Qt.AlignTop)
+
+        # Create a label for the block accessed input
+        label_execution = QLabel("Execution Plan")
+        self.layout_middle.addWidget(label_execution)
+
+        # Initialize the QTreeWidget
+        self.plan_tree_widget = QTreeWidget()
+        self.layout_middle.addWidget(self.plan_tree_widget)
+        #-----------------------------------------------
+
+        # -------------RIGHT SIDE-----------------------
+        # Create a vertical layout for the right box
+        self.layout_right = QVBoxLayout()
+        self.layout_right.setAlignment(Qt.AlignTop)
+
+        # Create a label for the block accessed input
+        label_blocks = QLabel("Query Expression Tree")
+        self.layout_right.addWidget(label_blocks)
+
+        # Create widget for graph
+        self.svg_widget = QSvgWidget(self)
+        self.layout_right.addWidget(self.svg_widget, 1)
+
+        # Load svg graph into widget
+        # self.svg_widget.load("plan-svg.svg")
+
         #-----------------------------------------------
 
         # Add a QSplitter to the main layout
         splitter = QSplitter()
         main_layout.addWidget(splitter)
 
-        # Add the left and right layouts to the QSplitter as widgets
+        # Add the left, middle and right layouts to the QSplitter as widgets
         widget_left = QWidget()
-        widget_left.setLayout(layout_left)
+        widget_left.setLayout(self.layout_left)
         splitter.addWidget(widget_left)
 
+        widget_middle = QWidget()
+        widget_middle.setLayout(self.layout_middle)
+        splitter.addWidget(widget_middle)
+
         widget_right = QWidget()
-        widget_right.setLayout(layout_right)
+        widget_right.setLayout(self.layout_right)
         splitter.addWidget(widget_right)
 
-        # # Create widget for graph
-        # graph_widget = QSvgWidget(self)
-        # main_layout.addWidget(graph_widget)
 
-        # # Load svg graph into widget
-        # graph_widget.load("plan-svg.svg")
 
         # Beautify the window with styles
         self.setWindowTitle("SQL Query App")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1200, 800)
         self.setStyleSheet("background-color: #f0f0f0; color: #000000;")
         self.label.setFont(QFont("Arial", 12))
         self.execute_button.setStyleSheet("background-color: #007acc; color: #ffffff;")
@@ -130,16 +160,13 @@ class SQLQueryApp(QWidget):
 
         
     def displayExecutionPlan(self, plan):
-        # Initialize the QTreeWidget
-        self.plan_tree_widget = QTreeWidget()
-        self.plan_tree_widget.setHeaderLabel("Execution Plan")
         
         # Generate the tree items from the plan
         root_item = build_tree_widget_item(plan)
         self.plan_tree_widget.addTopLevelItem(root_item)
         
         # Add the tree widget to the UI layout
-        self.layout_blocks.addWidget(self.plan_tree_widget)
+        self.layout_middle.addWidget(self.plan_tree_widget)
         
         # Update the UI
         self.plan_tree_widget.expandAll()  # Optionally expand all tree nodes
@@ -151,8 +178,10 @@ class SQLQueryApp(QWidget):
             display_tree_image(plan)
 
             # Display the Execution Plan in a separate dialog
-            dialog = ExecutionPlanDialog(plan, self)
-            dialog.exec_()
+            # dialog = ExecutionPlanDialog(plan, self)
+            # dialog.exec_()
+            self.displayExecutionPlan(plan)
+            self.svg_widget.load("plan-svg.svg")
         except Exception as e:
             self.showErrorMessage("Error Visualizing Query Plan", str(e))
 
