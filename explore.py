@@ -180,7 +180,7 @@ def get_columns_for_table(table_name):
         # Execute and fetch the query
         cursor.execute(column_query)
         columns_result = cursor.fetchall()
-        # Extract column names from the result using a for loop
+        # Extract column names from the result
         for col in columns_result:
             columns.append(col[0])
             
