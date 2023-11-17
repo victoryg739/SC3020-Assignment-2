@@ -160,16 +160,19 @@ class SQLQueryApp(QWidget):
 
         
     def displayExecutionPlan(self, plan):
-        
+        # clear previous results
+        self.plan_tree_widget.clear()
+
         # Generate the tree items from the plan
         root_item = build_tree_widget_item(plan)
+
         self.plan_tree_widget.addTopLevelItem(root_item)
         
         # Add the tree widget to the UI layout
-        self.layout_middle.addWidget(self.plan_tree_widget)
+        # self.layout_middle.addWidget(self.plan_tree_widget)
         
         # Update the UI
-        self.plan_tree_widget.expandAll()  # Optionally expand all tree nodes
+        self.plan_tree_widget.expandAll()  # expand all tree nodes
     
     def visualizeQueryPlan(self):
         query = self.sql_input.toPlainText()
@@ -198,10 +201,13 @@ class SQLQueryApp(QWidget):
                 self.tab_widget.addTab(tab, table_name)
                 self.tab_widget.setCurrentWidget(tab)
 
+            # visualise the query plan (QET and execution plan)
+            self.visualizeQueryPlan()
+
         except Exception as e:
             self.showErrorMessage("Error Executing Query", str(e))
 
-        self.visualizeQueryPlan()
+
 
     def tabChanged(self, index):
         # Get the current tab index and perform actions based on it
