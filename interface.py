@@ -206,6 +206,7 @@ class SQLQueryApp(QWidget):
             # Display the Execution Plan in a separate dialog
             # dialog = ExecutionPlanDialog(plan, self)
             # dialog.exec_()
+            self.displayExecutionPlan(plan)
             svg_item = QGraphicsSvgItem("plan-svg.svg")
             self.scene.clear()
             self.scene.addItem(svg_item)
