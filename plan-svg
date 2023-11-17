@@ -1,4 +1,52 @@
 // Query Execution Plan
 digraph {
-	"Seq Scan_1" [label="Seq Scan" shape=box]
+	Sort_1 [label=Sort shape=box]
+	"Merge Join_2" [label="Merge Join" shape=box]
+	Sort_1 -> "Merge Join_2"
+	"Gather Merge_4" [label="Gather Merge" shape=box]
+	"Merge Join_2" -> "Gather Merge_4"
+	"Index Scan_6" [label="Index Scan" shape=box]
+	"Gather Merge_4" -> "Index Scan_6"
+	Sort_8 [label=Sort shape=box]
+	"Merge Join_2" -> Sort_8
+	Gather_10 [label=Gather shape=box]
+	Sort_8 -> Gather_10
+	"Hash Join_12" [label="Hash Join" shape=box]
+	Gather_10 -> "Hash Join_12"
+	"Seq Scan_14" [label="Seq Scan" shape=box]
+	"Hash Join_12" -> "Seq Scan_14"
+	Hash_16 [label=Hash shape=box]
+	"Hash Join_12" -> Hash_16
+	"Hash Join_18" [label="Hash Join" shape=box]
+	Hash_16 -> "Hash Join_18"
+	"Seq Scan_20" [label="Seq Scan" shape=box]
+	"Hash Join_18" -> "Seq Scan_20"
+	Hash_22 [label=Hash shape=box]
+	"Hash Join_18" -> Hash_22
+	"Hash Join_24" [label="Hash Join" shape=box]
+	Hash_22 -> "Hash Join_24"
+	"Seq Scan_26" [label="Seq Scan" shape=box]
+	"Hash Join_24" -> "Seq Scan_26"
+	Hash_28 [label=Hash shape=box]
+	"Hash Join_24" -> Hash_28
+	"Seq Scan_30" [label="Seq Scan" shape=box]
+	Hash_28 -> "Seq Scan_30"
+	Aggregate_32 [label=Aggregate shape=box]
+	"Merge Join_2" -> Aggregate_32
+	"Nested Loop_34" [label="Nested Loop" shape=box]
+	Aggregate_32 -> "Nested Loop_34"
+	"Nested Loop_36" [label="Nested Loop" shape=box]
+	"Nested Loop_34" -> "Nested Loop_36"
+	"Nested Loop_38" [label="Nested Loop" shape=box]
+	"Nested Loop_36" -> "Nested Loop_38"
+	"Index Scan_40" [label="Index Scan" shape=box]
+	"Nested Loop_38" -> "Index Scan_40"
+	"Index Scan_42" [label="Index Scan" shape=box]
+	"Nested Loop_38" -> "Index Scan_42"
+	"Index Scan_44" [label="Index Scan" shape=box]
+	"Nested Loop_36" -> "Index Scan_44"
+	Memoize_46 [label=Memoize shape=box]
+	"Nested Loop_34" -> Memoize_46
+	"Index Scan_48" [label="Index Scan" shape=box]
+	Memoize_46 -> "Index Scan_48"
 }

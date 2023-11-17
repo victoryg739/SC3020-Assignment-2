@@ -1,5 +1,4 @@
 import psycopg2
-from psycopg2 import connect
 import re
 
 from PyQt5.QtWidgets import  QTreeWidgetItem
@@ -88,7 +87,7 @@ def execute_query_in_database(query):
     print(db_host)
     try:
         results = {}
-        # Establish a database connection
+
         conn = psycopg2.connect(
             host=db_host,
             database=db_name,
@@ -96,7 +95,6 @@ def execute_query_in_database(query):
             password=db_password
         )
 
-        # Create a cursor object
         cursor = conn.cursor()
 
         # Execute the SQL query
@@ -117,7 +115,6 @@ def execute_query_in_database(query):
         
         # If first pass error, we check 2nd pass for aggregate function
         if isErrorFirstPass:
-            # Establish a database connection
             conn = psycopg2.connect(
                 host=db_host,
                 database=db_name,
@@ -136,11 +133,11 @@ def execute_query_in_database(query):
                 # Fetch and format the results for each query
                 result = cursor.fetchall()
                 results[table_name] = result
-            # Close the cursor
+   
             cursor.close()
             conn.close()
             
-        # Close the connection
+
         conn.close()
             
         return results
@@ -152,14 +149,13 @@ def get_columns_for_table(table_name):
     # Initialize the list of columns, starting with the ctid
     columns = ["ctid"]
     try:
-        # Establish a database connection
         conn = psycopg2.connect(
             host=db_host,
             database=db_name,
             user=db_user,
             password=db_password
         )
-        # Create a cursor object
+  
         cursor = conn.cursor()
         # Query to get all column names for the table
         column_query = f"SELECT column_name FROM information_schema.columns WHERE table_name='{table_name}' ORDER BY ordinal_position"
@@ -169,8 +165,6 @@ def get_columns_for_table(table_name):
         # Extract column names from the result
         for col in columns_result:
             columns.append(col[0])
-            
-        # Close the cursor
             cursor.close()
             conn.close()
     except Exception as e:
