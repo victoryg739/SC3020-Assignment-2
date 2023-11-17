@@ -11,14 +11,8 @@ except ImportError:
 
 def get_execution_plan(query):
     from interface import db_host, db_name, db_user, db_password
-    """
-    This function gets the execution plan for the given SQL query
-    and returns it as a string.
-    """
-
 
     try:
-        # Connect to the database
         conn = psycopg2.connect(
             host=db_host,
             database=db_name,
@@ -31,21 +25,17 @@ def get_execution_plan(query):
         execution_plan_query = f"EXPLAIN (analyze, buffers, costs on, FORMAT JSON) {query};"
         cursor.execute(execution_plan_query)
 
-        # Fetch the plan
         plan = cursor.fetchall()
 
-        # Close cursor and connection
         cursor.close()
         conn.close()
 
-        return plan[0][0][0]['Plan']  # Assume there is at least one plan
+        return plan[0][0][0]['Plan']  
     except Exception as e:
         raise RuntimeError(f"Error getting the execution plan: {e}")
 
 def build_tree_widget_item(plan):
-        """
-        Recursively create QTreeWidgetItem based on the plan node.
-        """
+
         item = QTreeWidgetItem([plan['Node Type']])
         for key, value in plan.items():
             if key == 'Plans':
@@ -62,9 +52,6 @@ def build_tree_widget_item(plan):
         return item
 
 def display_tree_image(plan, filename='plan-svg'):
-    """
-    This function visualizes the execution plan using Graphviz launched in a PDF format.
-    """
 
     if not GRAPHVIZ_AVAILABLE:
         print("Graphviz is not available. Skipping visualization.")
@@ -125,7 +112,6 @@ def execute_query_in_database(query):
             # Fetch and format the results for each query
             result = cursor.fetchall()
             results[table_name] = result
-        # Close the cursor and connection
         cursor.close()
         conn.close()
         

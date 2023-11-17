@@ -1,18 +1,4 @@
 // Query Execution Plan
 digraph {
-	Limit_1 [label=Limit shape=box]
-	SetOp_2 [label=SetOp shape=box]
-	Limit_1 -> SetOp_2
-	Sort_4 [label=Sort shape=box]
-	SetOp_2 -> Sort_4
-	Append_6 [label=Append shape=box]
-	Sort_4 -> Append_6
-	"Subquery Scan_8" [label="Subquery Scan" shape=box]
-	Append_6 -> "Subquery Scan_8"
-	"Seq Scan_10" [label="Seq Scan" shape=box]
-	"Subquery Scan_8" -> "Seq Scan_10"
-	"Subquery Scan_12" [label="Subquery Scan" shape=box]
-	Append_6 -> "Subquery Scan_12"
-	"Seq Scan_14" [label="Seq Scan" shape=box]
-	"Subquery Scan_12" -> "Seq Scan_14"
+	"Seq Scan_1" [label="Seq Scan" shape=box]
 }

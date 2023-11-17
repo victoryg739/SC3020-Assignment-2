@@ -83,11 +83,6 @@ class SQLQueryApp(QWidget):
         self.layout_left.addWidget(self.execute_button)
         self.execute_button.clicked.connect(self.executeQuery)
 
-        # Create a button to visualize the execution plan
-        # self.visualize_plan_button = QPushButton("Visualize Execution Plan")
-        # self.layout_left.addWidget(self.visualize_plan_button)
-        # self.visualize_plan_button.clicked.connect(self.visualizeQueryPlan)
-
         # Add some spacing 
         self.layout_left.addSpacing(30)
 
@@ -110,7 +105,7 @@ class SQLQueryApp(QWidget):
 
         # Set the layout widget as the widget for the scroll area
         scroll_area.setWidget(blocks_layout_widget)
-        self.layout_left.addWidget(scroll_area, 1)  # Use stretch factor to control size
+        self.layout_left.addWidget(scroll_area, 1)  
 
         #-----------------------------------------------
         # -------------MIDDLE-----------------------
@@ -118,7 +113,6 @@ class SQLQueryApp(QWidget):
         self.layout_middle = QVBoxLayout()
         self.layout_middle.setAlignment(Qt.AlignTop)
 
-        # Create a label for the block accessed input
         label_execution = QLabel("Execution Plan")
         self.layout_middle.addWidget(label_execution)
 
@@ -129,7 +123,6 @@ class SQLQueryApp(QWidget):
         #-----------------------------------------------
 
         # -------------RIGHT SIDE-----------------------
-    # Create a vertical layout for the right box
         self.layout_right = QVBoxLayout()
         self.layout_right.setAlignment(Qt.AlignTop)
 
@@ -137,11 +130,6 @@ class SQLQueryApp(QWidget):
         label_blocks = QLabel("Query Expression Tree")
         self.layout_right.addWidget(label_blocks)
 
-        # # Create widget for graph
-        # self.svg_widget = QSvgWidget(self)
-        # self.layout_right.addWidget(self.svg_widget, 1)
-        
-        # Replace QSvgWidget with QGraphicsView for the query expression tree
         self.graphics_view = QGraphicsView(self)
         self.scene = QGraphicsScene(self)
         self.graphics_view.setScene(self.scene)
@@ -155,12 +143,8 @@ class SQLQueryApp(QWidget):
         self.zoom_in_button.clicked.connect(self.zoomIn)
         self.zoom_out_button.clicked.connect(self.zoomOut)
 
-        # Load svg graph into widget
-        # self.svg_widget.load("plan-svg.svg")
 
-        #-----------------------------------------------
 
-        # Add a QSplitter to the main layout
         splitter = QSplitter()
         main_layout.addWidget(splitter)
 
@@ -178,8 +162,6 @@ class SQLQueryApp(QWidget):
         splitter.addWidget(widget_right)
 
 
-
-        # Beautify the window with styles
         self.setWindowTitle("SQL Query App")
         self.setGeometry(100, 100, 1200, 800)
         self.setStyleSheet("background-color: #f0f0f0; color: #000000;")
@@ -196,10 +178,7 @@ class SQLQueryApp(QWidget):
         root_item = build_tree_widget_item(plan)
 
         self.plan_tree_widget.addTopLevelItem(root_item)
-        
-        # Add the tree widget to the UI layout
-        # self.layout_middle.addWidget(self.plan_tree_widget)
-        
+
         # Update the UI
         self.plan_tree_widget.expandAll()  # expand all tree nodes
     
@@ -209,9 +188,6 @@ class SQLQueryApp(QWidget):
             plan = get_execution_plan(query)
             display_tree_image(plan)
 
-            # Display the Execution Plan in a separate dialog
-            # dialog = ExecutionPlanDialog(plan, self)
-            # dialog.exec_()
             self.displayExecutionPlan(plan)
             svg_item = QGraphicsSvgItem("plan-svg.svg")
             self.scene.clear()
@@ -234,12 +210,10 @@ class SQLQueryApp(QWidget):
             self.results = execute_query_in_database(query)
             self.tab_widget.clear()
             for table_name in self.results:
-                # Create a new tab for each table
                 tab = QWidget()
                 self.tab_widget.addTab(tab, table_name)
                 self.tab_widget.setCurrentWidget(tab)
 
-            # visualise the query plan (QET and execution plan)
             self.visualizeQueryPlan()
 
         except Exception as e:
@@ -267,7 +241,6 @@ class SQLQueryApp(QWidget):
             error_dialog.exec_()
     
     def generateBlockAccessedButtons(self, results, table_name):
-        # Clear existing buttons when executing a new query
         self.clearButtons()
         self.record_dict = {}
         # Create buttons and store records in the dictionary
@@ -321,8 +294,8 @@ class SQLQueryApp(QWidget):
             # Set table properties
             table.setEditTriggers(QTableWidget.NoEditTriggers)  # Disable editing
             table.setShowGrid(True)
-            table.setLineWidth(1)  # Set line width for the grid
-            # text_edit.setPlainText(text)
+            table.setLineWidth(1)  
+
             table.setStyleSheet("color: black;")
             # Set the border color for horizontal header
             table.horizontalHeader().setStyleSheet("QHeaderView::section { border: 1px solid black; background-color: lightgrey;}")
