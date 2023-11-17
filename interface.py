@@ -1,39 +1,46 @@
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, \
-    QHBoxLayout, QFrame, QScrollArea, QDialog, QTabWidget, QSplitter, QTableWidget, QTableWidgetItem, QSizePolicy
+    QHBoxLayout, QFrame, QScrollArea, QDialog, QTabWidget, QSplitter, QTableWidget, QTableWidgetItem, QSizePolicy,QFormLayout
 from PyQt5.QtGui import QPalette, QColor, QFont
 from PyQt5.QtWidgets import QTreeWidget
 from PyQt5.QtSvg import QSvgWidget
 
 from explore import *
+from explore import db_host,db_name,db_password,db_user
 
-# not used
-class ExecutionPlanDialog(QDialog):
-    def __init__(self, plan, parent=None):
+class ConfigDialog(QDialog):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Execution Plan")
-        self.setGeometry(200, 200, 800, 600)
+        self.setWindowTitle("Database Connection Details")
+        self.setGeometry(200, 200, 400, 200)
 
-        layout = QVBoxLayout(self)
+        # Input fields for database connection details
+        self.host_input = QLineEdit()
+        self.name_input = QLineEdit()
+        self.user_input = QLineEdit()
+        self.password_input = QLineEdit()
+        self.password_input.setEchoMode(QLineEdit.Password)
 
-        # Create a label for the Execution Plan
-        label = QLabel("Execution Plan:")
-        layout.addWidget(label)
+        # Button to confirm the input
+        confirm_button = QPushButton("Confirm")
+        confirm_button.clicked.connect(self.accept)
 
-        # Initialize the QTreeWidget
-        plan_tree_widget = QTreeWidget()
-        plan_tree_widget.setHeaderLabel("Execution Plan")
+        # Create a layout for the dialog
+        layout = QFormLayout(self)
+        layout.addRow("Database Host:", self.host_input)
+        layout.addRow("Database Name:", self.name_input)
+        layout.addRow("Database User:", self.user_input)
+        layout.addRow("Database Password:", self.password_input)
+        layout.addWidget(confirm_button)
 
-        # Generate the tree items from the plan
-        root_item = build_tree_widget_item(plan)
-        plan_tree_widget.addTopLevelItem(root_item)
-
-        # Add the tree widget to the layout
-        layout.addWidget(plan_tree_widget)
-
-        # Optionally expand all tree nodes
-        plan_tree_widget.expandAll()
+    def get_connection_details(self):
+        return (
+            self.host_input.text(),
+            self.name_input.text(),
+            self.user_input.text(),
+            self.password_input.text()
+        )
 
 class SQLQueryApp(QWidget):
     def __init__(self):
@@ -110,6 +117,7 @@ class SQLQueryApp(QWidget):
 
         # Initialize the QTreeWidget
         self.plan_tree_widget = QTreeWidget()
+        self.plan_tree_widget.setHeaderLabel("Results:")
         self.layout_middle.addWidget(self.plan_tree_widget)
         #-----------------------------------------------
 
@@ -310,7 +318,11 @@ class SQLQueryApp(QWidget):
                 widget.deleteLater()
             self.layout_blocks.removeItem(item)
                      
-            
+db_host = ""
+db_name = ""
+db_user = ""
+db_password = ""
+
 def startWindow():
     app = QApplication(sys.argv)
 
@@ -322,5 +334,17 @@ def startWindow():
 
     window = SQLQueryApp()
     window.show()
+
+    # dialog = ConfigDialog()
+    # result = dialog.exec_()
+
+    # if result == QDialog.Accepted:
+    #     db_host, db_name, db_user, db_password = dialog.get_connection_details()
+    #     print(f"Database Host: {db_host}")
+    #     print(f"Database Name: {db_name}")
+    #     print(f"Database User: {db_user}")
+    #     print(f"Database Password: {db_password}")
+
+
     sys.exit(app.exec_())
 

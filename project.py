@@ -1,4 +1,3 @@
-
 from interface import startWindow
 '''
 Try these complex query examples:
