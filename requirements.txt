@@ -1,0 +1,5 @@
+graphviz==0.20.1
+psycopg2==2.9.6
+psycopg2_binary==2.9.6
+PyQt5==5.15.10
+PyQt5_sip==12.13.0
