@@ -210,7 +210,7 @@ class SQLQueryApp(QWidget):
             # Get the result for the current table
             if table_name in self.results:
                 result = self.results[table_name]
-                self.generateBlockAccessedButtons(result)
+                self.generateBlockAccessedButtons(result, table_name)
             else:
                 # Set the current tab to index 0 (or another default index)
                 self.tab_widget.setCurrentIndex(0)
@@ -222,7 +222,7 @@ class SQLQueryApp(QWidget):
             error_dialog.setText(message)
             error_dialog.exec_()
     
-    def generateBlockAccessedButtons(self, results):
+    def generateBlockAccessedButtons(self, results, table_name):
         # Clear existing buttons when executing a new query
         self.clearButtons()
         self.record_dict = {}
@@ -241,13 +241,15 @@ class SQLQueryApp(QWidget):
         for block in self.record_dict:
             self.record_dict[block] = sorted(self.record_dict[block], key=lambda x: int(x[0].split(',')[1][:-1]))
 
+        header = get_columns_for_table(table_name)
+        
         # Create buttons for each block and connect them to the showRecordsForBlock function
         for key in sorted(self.record_dict.keys()):
             temp = QPushButton(f"Block {key}")
             self.layout_blocks.addWidget(temp)
-            temp.clicked.connect(lambda _, block=key: self.showRecordsForBlock(block))
+            temp.clicked.connect(lambda _, block=key: self.showRecordsForBlock(block, header))
             
-    def showRecordsForBlock(self, block):
+    def showRecordsForBlock(self, block, header):
         # Display records for a specific block in a QDialog
         if block in self.record_dict:
             records = self.record_dict[block]
@@ -263,6 +265,9 @@ class SQLQueryApp(QWidget):
 
             # Display records in a QTableWidget
             table = QTableWidget(len(records), len(records[0]))
+            
+            # Set the header labels
+            table.setHorizontalHeaderLabels(header)
 
             for row, record in enumerate(records):
                 for col, field in enumerate(record):
@@ -282,6 +287,9 @@ class SQLQueryApp(QWidget):
             table.verticalHeader().setStyleSheet("QHeaderView::section { border: 1px solid black;background-color: lightgrey; }")
             layout.addWidget(table)
             table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            
+            dialog.setMinimumWidth(600)
+            dialog.setMinimumHeight(400)
 
             # Set the layout for the dialog
             dialog.setLayout(layout)
