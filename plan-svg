@@ -1,18 +1,54 @@
 // Query Execution Plan
 digraph {
 	Limit_1 [label=Limit shape=box]
-	SetOp_2 [label=SetOp shape=box]
-	Limit_1 -> SetOp_2
-	Sort_4 [label=Sort shape=box]
-	SetOp_2 -> Sort_4
-	Append_6 [label=Append shape=box]
-	Sort_4 -> Append_6
-	"Subquery Scan_8" [label="Subquery Scan" shape=box]
-	Append_6 -> "Subquery Scan_8"
-	"Seq Scan_10" [label="Seq Scan" shape=box]
-	"Subquery Scan_8" -> "Seq Scan_10"
-	"Subquery Scan_12" [label="Subquery Scan" shape=box]
-	Append_6 -> "Subquery Scan_12"
-	"Seq Scan_14" [label="Seq Scan" shape=box]
-	"Subquery Scan_12" -> "Seq Scan_14"
+	Sort_2 [label=Sort shape=box]
+	Limit_1 -> Sort_2
+	"Merge Join_4" [label="Merge Join" shape=box]
+	Sort_2 -> "Merge Join_4"
+	"Gather Merge_6" [label="Gather Merge" shape=box]
+	"Merge Join_4" -> "Gather Merge_6"
+	"Index Scan_8" [label="Index Scan" shape=box]
+	"Gather Merge_6" -> "Index Scan_8"
+	Sort_10 [label=Sort shape=box]
+	"Merge Join_4" -> Sort_10
+	Gather_12 [label=Gather shape=box]
+	Sort_10 -> Gather_12
+	"Hash Join_14" [label="Hash Join" shape=box]
+	Gather_12 -> "Hash Join_14"
+	"Seq Scan_16" [label="Seq Scan" shape=box]
+	"Hash Join_14" -> "Seq Scan_16"
+	Hash_18 [label=Hash shape=box]
+	"Hash Join_14" -> Hash_18
+	"Hash Join_20" [label="Hash Join" shape=box]
+	Hash_18 -> "Hash Join_20"
+	"Seq Scan_22" [label="Seq Scan" shape=box]
+	"Hash Join_20" -> "Seq Scan_22"
+	Hash_24 [label=Hash shape=box]
+	"Hash Join_20" -> Hash_24
+	"Hash Join_26" [label="Hash Join" shape=box]
+	Hash_24 -> "Hash Join_26"
+	"Seq Scan_28" [label="Seq Scan" shape=box]
+	"Hash Join_26" -> "Seq Scan_28"
+	Hash_30 [label=Hash shape=box]
+	"Hash Join_26" -> Hash_30
+	"Seq Scan_32" [label="Seq Scan" shape=box]
+	Hash_30 -> "Seq Scan_32"
+	Aggregate_34 [label=Aggregate shape=box]
+	"Merge Join_4" -> Aggregate_34
+	"Nested Loop_36" [label="Nested Loop" shape=box]
+	Aggregate_34 -> "Nested Loop_36"
+	"Nested Loop_38" [label="Nested Loop" shape=box]
+	"Nested Loop_36" -> "Nested Loop_38"
+	"Nested Loop_40" [label="Nested Loop" shape=box]
+	"Nested Loop_38" -> "Nested Loop_40"
+	"Index Scan_42" [label="Index Scan" shape=box]
+	"Nested Loop_40" -> "Index Scan_42"
+	"Index Scan_44" [label="Index Scan" shape=box]
+	"Nested Loop_40" -> "Index Scan_44"
+	"Index Scan_46" [label="Index Scan" shape=box]
+	"Nested Loop_38" -> "Index Scan_46"
+	Memoize_48 [label=Memoize shape=box]
+	"Nested Loop_36" -> Memoize_48
+	"Index Scan_50" [label="Index Scan" shape=box]
+	Memoize_48 -> "Index Scan_50"
 }

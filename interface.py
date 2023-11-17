@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QVBoxLayout, QLa
 from PyQt5.QtGui import QPalette, QColor, QFont
 from PyQt5.QtWidgets import QTreeWidget
 from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtSvg import QGraphicsSvgItem
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene
 
 from explore import build_tree_widget_item, convert_query_to_ctid_query, display_tree_image, execute_query_in_database, get_columns_for_table, get_execution_plan,get_table_names
 
@@ -121,7 +123,7 @@ class SQLQueryApp(QWidget):
         #-----------------------------------------------
 
         # -------------RIGHT SIDE-----------------------
-        # Create a vertical layout for the right box
+    # Create a vertical layout for the right box
         self.layout_right = QVBoxLayout()
         self.layout_right.setAlignment(Qt.AlignTop)
 
@@ -129,9 +131,23 @@ class SQLQueryApp(QWidget):
         label_blocks = QLabel("Query Expression Tree")
         self.layout_right.addWidget(label_blocks)
 
-        # Create widget for graph
-        self.svg_widget = QSvgWidget(self)
-        self.layout_right.addWidget(self.svg_widget, 1)
+        # # Create widget for graph
+        # self.svg_widget = QSvgWidget(self)
+        # self.layout_right.addWidget(self.svg_widget, 1)
+        
+        # Replace QSvgWidget with QGraphicsView for the query expression tree
+        self.graphics_view = QGraphicsView(self)
+        self.scene = QGraphicsScene(self)
+        self.graphics_view.setScene(self.scene)
+        self.layout_right.addWidget(self.graphics_view, 1)
+            # Add zoom in and zoom out buttons
+        self.zoom_in_button = QPushButton("Zoom In ➕")
+        self.zoom_out_button = QPushButton("Zoom Out ➖")
+        self.layout_right.addWidget(self.zoom_in_button)
+        self.layout_right.addWidget(self.zoom_out_button)
+
+        self.zoom_in_button.clicked.connect(self.zoomIn)
+        self.zoom_out_button.clicked.connect(self.zoomOut)
 
         # Load svg graph into widget
         # self.svg_widget.load("plan-svg.svg")
@@ -190,11 +206,19 @@ class SQLQueryApp(QWidget):
             # Display the Execution Plan in a separate dialog
             # dialog = ExecutionPlanDialog(plan, self)
             # dialog.exec_()
-            self.displayExecutionPlan(plan)
-            self.svg_widget.load("plan-svg.svg")
+            svg_item = QGraphicsSvgItem("plan-svg.svg")
+            self.scene.clear()
+            self.scene.addItem(svg_item)
+            self.graphics_view.fitInView(svg_item, Qt.KeepAspectRatio)
         except Exception as e:
             self.showErrorMessage("Error Visualizing Query Plan", str(e))
+    def zoomIn(self):
+        # Implement zoom in functionality
+        self.graphics_view.scale(1.2, 1.2)
 
+    def zoomOut(self):
+        # Implement zoom out functionality
+        self.graphics_view.scale(0.8, 0.8)
     def executeQuery(self):
         # Get the SQL query from the input field
         query = self.sql_input.toPlainText()
