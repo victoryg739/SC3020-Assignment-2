@@ -159,6 +159,35 @@ def execute_query_in_database(query):
     except Exception as e:
         raise RuntimeError(f"Error executing the query: {e}")
 
+def get_columns_for_table(table_name):
+    # Initialize the list of columns, starting with the ctid
+    columns = ["ctid"]
+    try:
+        # Establish a database connection
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
+        # Create a cursor object
+        cursor = conn.cursor()
+        # Query to get all column names for the table
+        column_query = f"SELECT column_name FROM information_schema.columns WHERE table_name='{table_name}' ORDER BY ordinal_position"
+        # Execute and fetch the query
+        cursor.execute(column_query)
+        columns_result = cursor.fetchall()
+        # Extract column names from the result using a for loop
+        for col in columns_result:
+            columns.append(col[0])
+            
+        # Close the cursor
+            cursor.close()
+            conn.close()
+    except Exception as e:
+        raise RuntimeError(f"Error retrieveing table headers")
+    return columns
+
 def get_table_names(query):
     # Regular expression to match table names mentioned after "FROM" or "JOIN"
     table_pattern = r'\b(FROM|JOIN)\s+([a-zA-Z_][a-zAZ0-9_\.]+(?:\s*,\s*[a-zA-Z_][a-zA-Z0-9_\.]+)*)'
