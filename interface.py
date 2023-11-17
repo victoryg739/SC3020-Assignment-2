@@ -36,6 +36,11 @@ class ConfigDialog(QDialog):
         layout.addRow("Database Password:", self.password_input)
         layout.addWidget(confirm_button)
 
+        # Set placeholders for each input field
+        self.host_input.setPlaceholderText("Example: localhost")
+        self.name_input.setPlaceholderText("Example: TPC-H")
+        self.user_input.setPlaceholderText("Example: postgres")
+
     def get_connection_details(self):
         return (
             self.host_input.text(),
@@ -368,10 +373,10 @@ def startWindow():
 
         if result == QDialog.Accepted:
             db_host, db_name, db_user, db_password = dialog.get_connection_details()
-            print(f"Database Host: {db_host}")
-            print(f"Database Name: {db_name}")
-            print(f"Database User: {db_user}")
-            print(f"Database Password: {db_password}")
+            # print(f"Database Host: {db_host}")
+            # print(f"Database Name: {db_name}")
+            # print(f"Database User: {db_user}")
+            # print(f"Database Password: {db_password}")
 
             try:
                 # Attempt to connect to the database
