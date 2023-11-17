@@ -4,7 +4,7 @@ from psycopg2 import connect
 # Rest of your code using the `connect` function
 
 import re
-from config import db_host, db_name, db_user, db_password
+
 from PyQt5.QtWidgets import  QTreeWidgetItem
 try:
     from graphviz import Digraph
@@ -13,10 +13,13 @@ except ImportError:
     GRAPHVIZ_AVAILABLE = False
 
 def get_execution_plan(query):
+    from interface import db_host, db_name, db_user, db_password
     """
     This function gets the execution plan for the given SQL query
     and returns it as a string.
     """
+
+
     try:
         # Connect to the database
         conn = psycopg2.connect(
@@ -97,6 +100,8 @@ def display_tree_image(plan, filename='plan-svg'):
 
     
 def execute_query_in_database(query):
+    from interface import db_host,db_name,db_user,db_password
+    print(db_host)
     try:
         results = {}
         # Establish a database connection
@@ -160,6 +165,7 @@ def execute_query_in_database(query):
         raise RuntimeError(f"Error executing the query: {e}")
 
 def get_columns_for_table(table_name):
+    from interface import db_host,db_name,db_user,db_password
     # Initialize the list of columns, starting with the ctid
     columns = ["ctid"]
     try:

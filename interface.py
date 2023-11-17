@@ -6,8 +6,7 @@ from PyQt5.QtGui import QPalette, QColor, QFont
 from PyQt5.QtWidgets import QTreeWidget
 from PyQt5.QtSvg import QSvgWidget
 
-from explore import *
-from explore import db_host,db_name,db_password,db_user
+from explore import build_tree_widget_item, convert_query_to_ctid_query, display_tree_image, execute_query_in_database, get_columns_for_table, get_execution_plan,get_table_names
 
 class ConfigDialog(QDialog):
     def __init__(self, parent=None):
@@ -317,13 +316,14 @@ class SQLQueryApp(QWidget):
             if widget is not None:
                 widget.deleteLater()
             self.layout_blocks.removeItem(item)
-                     
+
 db_host = ""
 db_name = ""
 db_user = ""
 db_password = ""
 
 def startWindow():
+    global db_host, db_name, db_user, db_password  # Use the global keyword
     app = QApplication(sys.argv)
 
     # Set a custom palette for a professional look
@@ -335,15 +335,15 @@ def startWindow():
     window = SQLQueryApp()
     window.show()
 
-    # dialog = ConfigDialog()
-    # result = dialog.exec_()
+    dialog = ConfigDialog()
+    result = dialog.exec_()
 
-    # if result == QDialog.Accepted:
-    #     db_host, db_name, db_user, db_password = dialog.get_connection_details()
-    #     print(f"Database Host: {db_host}")
-    #     print(f"Database Name: {db_name}")
-    #     print(f"Database User: {db_user}")
-    #     print(f"Database Password: {db_password}")
+    if result == QDialog.Accepted:
+        db_host, db_name, db_user, db_password = dialog.get_connection_details()
+        print(f"Database Host: {db_host}")
+        print(f"Database Name: {db_name}")
+        print(f"Database User: {db_user}")
+        print(f"Database Password: {db_password}")
 
 
     sys.exit(app.exec_())
