@@ -1,8 +1,5 @@
 import psycopg2
 from psycopg2 import connect
-
-# Rest of your code using the `connect` function
-
 import re
 
 from PyQt5.QtWidgets import  QTreeWidgetItem
@@ -201,7 +198,7 @@ def get_table_names(query):
     # Find all matches of the table pattern in the SQL query
     matches = re.findall(table_pattern, query, flags=re.IGNORECASE)
 
-    # Extract only the table names, not the "FROM" or "JOIN" keywords
+    # Extract only the table names
     table_names = [table.replace(' ', '').split(',') for _, table in matches]
     table_names = [item for sublist in table_names for item in sublist]
     table_names = [name.strip() for name in table_names]
