@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QTreeWidget
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtSvg import QGraphicsSvgItem
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene
+import psycopg2
 
 from explore import build_tree_widget_item, convert_query_to_ctid_query, display_tree_image, execute_query_in_database, get_columns_for_table, get_execution_plan,get_table_names
 
@@ -357,19 +358,36 @@ def startWindow():
     palette.setColor(QPalette.WindowText, QColor(0, 0, 0))
     app.setPalette(palette)
 
-    window = SQLQueryApp()
-    window.show()
+    connected = False
+    while not connected:
+        window = SQLQueryApp()
+        window.show()
 
-    dialog = ConfigDialog()
-    result = dialog.exec_()
+        dialog = ConfigDialog()
+        result = dialog.exec_()
 
-    if result == QDialog.Accepted:
-        db_host, db_name, db_user, db_password = dialog.get_connection_details()
-        print(f"Database Host: {db_host}")
-        print(f"Database Name: {db_name}")
-        print(f"Database User: {db_user}")
-        print(f"Database Password: {db_password}")
+        if result == QDialog.Accepted:
+            db_host, db_name, db_user, db_password = dialog.get_connection_details()
+            print(f"Database Host: {db_host}")
+            print(f"Database Name: {db_name}")
+            print(f"Database User: {db_user}")
+            print(f"Database Password: {db_password}")
 
+            try:
+                # Attempt to connect to the database
+                psycopg2.connect(
+                    host=db_host,
+                    database=db_name,
+                    user=db_user,
+                    password=db_password
+                )
+                connected = True  # Set connected to True if the connection is successful
+            except Exception as e:
+                # Display an error message
+                QMessageBox.critical(None, "Connection Error", f"Error connecting to the database: {str(e)}")
 
     sys.exit(app.exec_())
+
+
+   
 
