@@ -1,52 +1,54 @@
 // Query Execution Plan
 digraph {
-	Sort_1 [label=Sort shape=box]
-	"Merge Join_2" [label="Merge Join" shape=box]
-	Sort_1 -> "Merge Join_2"
-	"Gather Merge_4" [label="Gather Merge" shape=box]
-	"Merge Join_2" -> "Gather Merge_4"
-	"Index Scan_6" [label="Index Scan" shape=box]
-	"Gather Merge_4" -> "Index Scan_6"
-	Sort_8 [label=Sort shape=box]
-	"Merge Join_2" -> Sort_8
-	Gather_10 [label=Gather shape=box]
-	Sort_8 -> Gather_10
-	"Hash Join_12" [label="Hash Join" shape=box]
-	Gather_10 -> "Hash Join_12"
-	"Seq Scan_14" [label="Seq Scan" shape=box]
-	"Hash Join_12" -> "Seq Scan_14"
-	Hash_16 [label=Hash shape=box]
-	"Hash Join_12" -> Hash_16
-	"Hash Join_18" [label="Hash Join" shape=box]
-	Hash_16 -> "Hash Join_18"
-	"Seq Scan_20" [label="Seq Scan" shape=box]
-	"Hash Join_18" -> "Seq Scan_20"
-	Hash_22 [label=Hash shape=box]
-	"Hash Join_18" -> Hash_22
-	"Hash Join_24" [label="Hash Join" shape=box]
-	Hash_22 -> "Hash Join_24"
-	"Seq Scan_26" [label="Seq Scan" shape=box]
-	"Hash Join_24" -> "Seq Scan_26"
-	Hash_28 [label=Hash shape=box]
-	"Hash Join_24" -> Hash_28
-	"Seq Scan_30" [label="Seq Scan" shape=box]
-	Hash_28 -> "Seq Scan_30"
-	Aggregate_32 [label=Aggregate shape=box]
-	"Merge Join_2" -> Aggregate_32
-	"Nested Loop_34" [label="Nested Loop" shape=box]
-	Aggregate_32 -> "Nested Loop_34"
+	Limit_1 [label=Limit shape=box]
+	Sort_2 [label=Sort shape=box]
+	Limit_1 -> Sort_2
+	"Merge Join_4" [label="Merge Join" shape=box]
+	Sort_2 -> "Merge Join_4"
+	"Gather Merge_6" [label="Gather Merge" shape=box]
+	"Merge Join_4" -> "Gather Merge_6"
+	"Index Scan_8" [label="Index Scan" shape=box]
+	"Gather Merge_6" -> "Index Scan_8"
+	Sort_10 [label=Sort shape=box]
+	"Merge Join_4" -> Sort_10
+	Gather_12 [label=Gather shape=box]
+	Sort_10 -> Gather_12
+	"Hash Join_14" [label="Hash Join" shape=box]
+	Gather_12 -> "Hash Join_14"
+	"Seq Scan_16" [label="Seq Scan" shape=box]
+	"Hash Join_14" -> "Seq Scan_16"
+	Hash_18 [label=Hash shape=box]
+	"Hash Join_14" -> Hash_18
+	"Hash Join_20" [label="Hash Join" shape=box]
+	Hash_18 -> "Hash Join_20"
+	"Seq Scan_22" [label="Seq Scan" shape=box]
+	"Hash Join_20" -> "Seq Scan_22"
+	Hash_24 [label=Hash shape=box]
+	"Hash Join_20" -> Hash_24
+	"Hash Join_26" [label="Hash Join" shape=box]
+	Hash_24 -> "Hash Join_26"
+	"Seq Scan_28" [label="Seq Scan" shape=box]
+	"Hash Join_26" -> "Seq Scan_28"
+	Hash_30 [label=Hash shape=box]
+	"Hash Join_26" -> Hash_30
+	"Seq Scan_32" [label="Seq Scan" shape=box]
+	Hash_30 -> "Seq Scan_32"
+	Aggregate_34 [label=Aggregate shape=box]
+	"Merge Join_4" -> Aggregate_34
 	"Nested Loop_36" [label="Nested Loop" shape=box]
-	"Nested Loop_34" -> "Nested Loop_36"
+	Aggregate_34 -> "Nested Loop_36"
 	"Nested Loop_38" [label="Nested Loop" shape=box]
 	"Nested Loop_36" -> "Nested Loop_38"
-	"Index Scan_40" [label="Index Scan" shape=box]
-	"Nested Loop_38" -> "Index Scan_40"
+	"Nested Loop_40" [label="Nested Loop" shape=box]
+	"Nested Loop_38" -> "Nested Loop_40"
 	"Index Scan_42" [label="Index Scan" shape=box]
-	"Nested Loop_38" -> "Index Scan_42"
+	"Nested Loop_40" -> "Index Scan_42"
 	"Index Scan_44" [label="Index Scan" shape=box]
-	"Nested Loop_36" -> "Index Scan_44"
-	Memoize_46 [label=Memoize shape=box]
-	"Nested Loop_34" -> Memoize_46
-	"Index Scan_48" [label="Index Scan" shape=box]
-	Memoize_46 -> "Index Scan_48"
+	"Nested Loop_40" -> "Index Scan_44"
+	"Index Scan_46" [label="Index Scan" shape=box]
+	"Nested Loop_38" -> "Index Scan_46"
+	Memoize_48 [label=Memoize shape=box]
+	"Nested Loop_36" -> Memoize_48
+	"Index Scan_50" [label="Index Scan" shape=box]
+	Memoize_48 -> "Index Scan_50"
 }

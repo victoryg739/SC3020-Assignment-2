@@ -1,12 +1,13 @@
 import sys
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPalette, QColor, QFont
 from PyQt5.QtSvg import QGraphicsSvgItem
-
+import concurrent.futures
+from itertools import islice
 import psycopg2
 from explore import *
-
+from collections import defaultdict
 class ConfigDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -171,18 +172,21 @@ class SQLQueryApp(QWidget):
 
     def zoomOut(self):
         self.graphics_view.scale(0.8, 0.8)
+
     def executeQuery(self):
         query = self.sql_input.toPlainText()
         try:
             # results contains a dictionary of table names and their records
             self.results = execute_query_in_database(query)
+            print("Result out")
             self.tab_widget.clear()
+            self.visualizeQueryPlan()
             for table_name in self.results:
                 # Create a new tab for each table
                 tab = QWidget()
                 self.tab_widget.addTab(tab, table_name)
                 self.tab_widget.setCurrentWidget(tab)
-            self.visualizeQueryPlan()
+  
 
         except Exception as e:
             self.showErrorMessage("Error Executing Query", str(e))
@@ -203,25 +207,55 @@ class SQLQueryApp(QWidget):
             error_dialog.setText(message)
             error_dialog.exec_()
     
-    def generateBlockAccessedButtons(self, results, table_name):
+    def generateBlockAccessedButtons(self, results, table_name, chunk_size=100):
         self.clearButtons()
-        self.record_dict = {}
-        for record in results:
+        self.record_dict = defaultdict(list)
+
+        def process_record(record):
             elements = [int(x) for x in record[0][1:-1].split(',')]
+            self.record_dict[elements[0]].append(record)
 
-            if elements[0] not in self.record_dict:
-                self.record_dict[elements[0]] = [record]
-            else:
-                self.record_dict[elements[0]].append(record)
-        for block in self.record_dict:
-            self.record_dict[block] = sorted(self.record_dict[block], key=lambda x: int(x[0].split(',')[1][:-1]))
+        # Lazy loading using a generator
+        def lazy_load_data():
+            for record in results:
+                yield record
 
-        header = get_columns_for_table(table_name)
-        
+        lazy_data = lazy_load_data()
+        chunk_number = 0  # Initialize the chunk number counter
+
+        # Process and display data in chunks using multiple threads
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            while True:
+                chunk = list(islice(lazy_data, chunk_size))
+                if not chunk:
+                    break
+
+                # Use ThreadPoolExecutor to parallelize the processing
+                futures = [executor.submit(process_record, record) for record in chunk]
+                concurrent.futures.wait(futures)
+
+                for block in self.record_dict:
+                    self.record_dict[block] = sorted(self.record_dict[block], key=lambda x: int(x[0].split(',')[1][:-1]))
+
+                header = get_columns_for_table(table_name)
+
+                # Emit a signal to update UI after processing each chunk
+                QTimer.singleShot(0, lambda num=chunk_number, h=header: self.updateUI(num, h))
+                chunk_number += 1  # Increment the chunk number counter
+
+                # Allow the event loop to process pending events
+                QCoreApplication.processEvents()
+
+    def updateUI(self, chunk_number, header):
+        print(f"Processing Chunk {chunk_number}")
+
         for key in sorted(self.record_dict.keys()):
             temp = QPushButton(f"Block {key}")
             self.layout_blocks.addWidget(temp)
-            temp.clicked.connect(lambda _, block=key: self.showRecordsForBlock(block, header))
+            temp.clicked.connect(lambda _, block=key, h=header: self.showRecordsForBlock(block, h))
+            # Allow the event loop to process pending events
+            QCoreApplication.processEvents()
+
             
     def showRecordsForBlock(self, block, header):
   

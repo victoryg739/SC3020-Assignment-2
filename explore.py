@@ -84,7 +84,7 @@ def display_tree_image(plan, filename='plan-svg'):
     
 def execute_query_in_database(query):
     from interface import db_host,db_name,db_user,db_password
-    print(db_host)
+
     try:
         results = {}
 
